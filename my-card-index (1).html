@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Card</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#f2f2f7;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+body{color:#111}
+.container{min-height:100vh;padding:max(45px,env(safe-area-inset-top)) 18px max(35px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}
+.header{width:100%;max-width:400px;display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.back{font-size:30px;font-weight:300;color:#007aff}
+.title{font-size:17px;font-weight:600}
+.card{width:100%;max-width:400px;margin:0 auto;border-radius:20px;overflow:hidden;background:white;box-shadow:0 5px 12px rgba(0,0,0,.10),0 15px 35px rgba(0,0,0,.12);transform:translateZ(0)}
+.card img{display:block;width:100%;height:auto;object-fit:contain}
+.suica-button{display:flex;width:100%;max-width:400px;height:54px;margin-top:60px;align-items:center;justify-content:center;border-radius:15px;background:#007aff;color:white;text-decoration:none;font-size:17px;font-weight:600;box-shadow:0 4px 10px rgba(0,122,255,.25);transition:transform .1s,opacity .1s}
+.suica-button:active{transform:scale(.97);opacity:.75}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header"><div class="back">‹</div><div class="title">My Card</div><div style="width:30px"></div></div>
+<div class="card"><img src="card.png" alt="My Card"></div>
+</div>
+</body>
+</html>
