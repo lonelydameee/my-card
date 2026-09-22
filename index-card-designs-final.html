@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Card</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#f2f2f7;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif;color:#111}
+body{overflow-x:hidden}.container{min-height:100vh;padding:12px 18px max(35px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}
+.header{width:100%;max-width:400px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;min-height:36px}.back{font-size:30px;font-weight:300;color:#007aff;width:55px;cursor:pointer}.title{font-size:17px;font-weight:600;text-align:center;white-space:nowrap}.header-action{width:55px;text-align:right;color:#007aff;font-size:15px;cursor:pointer;white-space:nowrap}
+.card{width:100%;max-width:400px;margin:0 auto;border-radius:20px;overflow:hidden;background:white;box-shadow:0 5px 12px rgba(0,0,0,.10),0 15px 35px rgba(0,0,0,.12)}.card img{display:block;width:100%;height:auto;object-fit:contain}
+.page{width:100%;max-width:400px;display:none}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.design-item{border:0;background:white;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.10);cursor:pointer;text-align:center;position:relative}.design-item img{display:block;width:100%;height:auto;aspect-ratio:1.585;object-fit:cover}.design-name{font-size:15px;font-weight:500;padding:10px 5px 12px;min-height:40px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.add-item{min-height:145px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#007aff;font-size:15px;font-weight:500}.add-icon{font-size:32px;font-weight:300;line-height:1;margin-bottom:8px}.hidden{display:none!important}input[type=file]{display:none}
+.manage-list{display:flex;flex-direction:column;gap:12px}.manage-item{background:white;border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.08)}.manage-item img{width:82px;height:52px;object-fit:cover;border-radius:8px;flex:none}.manage-info{flex:1;min-width:0}.manage-name{font-size:15px;margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.manage-actions{display:flex;gap:8px}.manage-actions button{border:0;border-radius:8px;padding:7px 10px;font-size:13px;cursor:pointer}.rename-btn{background:#f2f2f7;color:#007aff}.remove-btn{background:#fff0ef;color:#ff3b30}.no-items{background:white;border-radius:14px;padding:18px;text-align:center;color:#777;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}.modal.open{display:flex}.sheet{width:100%;max-width:520px;background:#fff;border-radius:20px 20px 0 0;padding:16px 18px max(18px,env(safe-area-inset-bottom));max-height:92vh;overflow:auto}.sheet h2{font-size:18px;text-align:center;margin:4px 0 14px}.crop-wrap{position:relative;width:100%;aspect-ratio:1.585;background:#111;border-radius:12px;overflow:hidden;touch-action:none}.crop-image{position:absolute;max-width:none;user-select:none;-webkit-user-drag:none;cursor:grab;touch-action:none}.crop-image.dragging{cursor:grabbing}.crop-frame{position:absolute;inset:0;border:2px solid rgba(255,255,255,.95);pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.32)}.crop-help{text-align:center;font-size:13px;color:#666;margin:10px 0}.zoom-row{display:flex;align-items:center;gap:10px;margin:8px 0 14px}.zoom-row span{font-size:13px;color:#666}.zoom-row input{flex:1}.sheet-buttons{display:flex;gap:10px}.sheet-buttons button{flex:1;height:46px;border:0;border-radius:12px;font-size:16px;font-weight:600}.cancel{background:#f2f2f7;color:#111}.save{background:#007aff;color:white}
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="mainPage" class="page" style="display:block">
+    <div class="header"><div class="back" onclick="showDesigns()">‹</div><div class="title">My Card</div><div class="header-action"></div></div>
+    <div class="card"><img id="mainCard" src="card.png" alt="My Card"></div>
+  </div>
+
+  <div id="designPage" class="page">
+    <div class="header"><div class="back" onclick="showMain()">‹</div><div class="title">カードデザイン変更</div><div class="header-action" onclick="showManage()">削除</div></div>
+    <div id="designGrid" class="grid"></div>
+  </div>
+
+  <div id="managePage" class="page">
+    <div class="header"><div class="back" onclick="showDesigns()">‹</div><div class="title">デザインを削除</div><div class="header-action"></div></div>
+    <div id="manageList" class="manage-list"></div>
+  </div>
+</div>
+
+<div id="cropModal" class="modal">
+  <div class="sheet">
+    <h2>カード画像を調整</h2>
+    <div id="cropWrap" class="crop-wrap"><img id="cropImage" class="crop-image"></div>
+    <div class="crop-help">画像をドラッグして位置を調整、スライダーで拡大・縮小</div>
+    <div class="zoom-row"><span>縮小</span><input id="zoom" type="range" min="1" max="3.5" step="0.01" value="1"><span>拡大</span></div>
+    <div class="sheet-buttons"><button class="cancel" onclick="closeCrop()">キャンセル</button><button class="save" onclick="saveCrop()">この範囲で追加</button></div>
+  </div>
+</div>
+
+<input id="photoInput" type="file" accept="image/*">
+<script>
+const RATIO=1.585; // Suica等の標準カード比率に近い 85.60 : 53.98
+const mainPage=document.getElementById('mainPage'), designPage=document.getElementById('designPage'), managePage=document.getElementById('managePage');
+const mainCard=document.getElementById('mainCard'), grid=document.getElementById('designGrid'), manageList=document.getElementById('manageList');
+const photoInput=document.getElementById('photoInput'), modal=document.getElementById('cropModal'), cropWrap=document.getElementById('cropWrap'), cropImage=document.getElementById('cropImage'), zoom=document.getElementById('zoom');
+let cropState={src:null,naturalW:0,naturalH:0,scale:1,x:0,y:0,startX:0,startY:0,dragging:false};
+
+const defaultDesigns=[
+ {id:'design1',src:'design1.png',name:'デザイン1'},
+ {id:'design2',src:'card.png',name:'デザイン2'}
+];
+function uid(){return 'custom_'+Date.now()+'_'+Math.random().toString(36).slice(2,8)}
+function getCustoms(){try{return JSON.parse(localStorage.getItem('customDesigns')||'[]')}catch(e){return []}}
+function saveCustoms(a){localStorage.setItem('customDesigns',JSON.stringify(a))}
+function getDefaults(){return JSON.parse(localStorage.getItem('hiddenDefaults')||'[]')}
+function saveDefaults(a){localStorage.setItem('hiddenDefaults',JSON.stringify(a))}
+function nameFor(d){return localStorage.getItem('name_'+d.id)||d.name}
+function setName(id,name){localStorage.setItem('name_'+id,name)}
+function allDesigns(){const hidden=getDefaults();return defaultDesigns.filter(d=>!hidden.includes(d.id)).map(d=>({...d,name:nameFor(d)})).concat(getCustoms().map(d=>({...d,name:nameFor(d)})))}
+
+const saved=localStorage.getItem('selectedCard'); if(saved) mainCard.src=saved;
+// Migrate the previous single custom design, if it exists.
+if(!localStorage.getItem('customDesigns') && localStorage.getItem('customCardImage')){
+ const img=localStorage.getItem('customCardImage'); saveCustoms([{id:uid(),src:img,name:localStorage.getItem('name_custom')||'追加したデザイン'}]);
+}
+renderDesigns();
+
+function showMain(){mainPage.style.display='block';designPage.style.display='none';managePage.style.display='none'}
+function showDesigns(){mainPage.style.display='none';designPage.style.display='block';managePage.style.display='none';renderDesigns()}
+function showManage(){mainPage.style.display='none';designPage.style.display='none';managePage.style.display='block';renderManage()}
+function selectDesign(id){const d=allDesigns().find(x=>x.id===id);if(!d)return;mainCard.src=d.src;localStorage.setItem('selectedCard',d.src);showMain()}
+function renderDesigns(){
+ grid.innerHTML='';
+ const list=allDesigns();
+ list.forEach(d=>{
+  const b=document.createElement('button');b.className='design-item';b.onclick=()=>selectDesign(d.id);
+  const img=document.createElement('img');img.src=d.src;img.alt=d.name;
+  const nm=document.createElement('div');nm.className='design-name';nm.textContent=d.name;
+  b.append(img,nm);grid.appendChild(b);
+ });
+ const add=document.createElement('label');add.className='design-item add-item';add.innerHTML='<span class="add-icon">＋</span><span>新たなデザインを追加...</span>';
+ add.onclick=()=>photoInput.click();grid.appendChild(add);
+}
+function renderManage(){
+ manageList.innerHTML='';const list=allDesigns();
+ if(!list.length){manageList.innerHTML='<div class="no-items">削除できるデザインはありません。<br>「‹」で戻って新しいデザインを追加できます。</div>';return}
+ list.forEach(d=>{
+  const row=document.createElement('div');row.className='manage-item';
+  const img=document.createElement('img');img.src=d.src;
+  const info=document.createElement('div');info.className='manage-info';
+  const name=document.createElement('div');name.className='manage-name';name.textContent=d.name;
+  const actions=document.createElement('div');actions.className='manage-actions';
+  const ren=document.createElement('button');ren.className='rename-btn';ren.textContent='名前を変更';ren.onclick=()=>renameDesign(d.id);
+  const del=document.createElement('button');del.className='remove-btn';del.textContent='削除';del.onclick=()=>deleteDesign(d.id);
+  actions.append(ren,del);info.append(name,actions);row.append(img,info);manageList.appendChild(row);
+ });
+}
+function renameDesign(id){const d=allDesigns().find(x=>x.id===id);if(!d)return;const n=prompt('デザイン名を入力してください',d.name);if(n===null)return;const t=n.trim();if(!t){alert('デザイン名を入力してください');return}setName(id,t);renderDesigns();renderManage()}
+function deleteDesign(id){const d=allDesigns().find(x=>x.id===id);if(!d)return;if(!confirm('「'+d.name+'」を削除しますか？'))return;
+ if(id.startsWith('custom_')){saveCustoms(getCustoms().filter(x=>x.id!==id));localStorage.removeItem('name_'+id)}
+ else {saveDefaults([...new Set([...getDefaults(),id])]);localStorage.removeItem('name_'+id)}
+ const selected=localStorage.getItem('selectedCard');if(selected===d.src){localStorage.removeItem('selectedCard');mainCard.src='card.png'}
+ renderDesigns();renderManage();
+}
+
+photoInput.addEventListener('change',()=>{const file=photoInput.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>openCrop(e.target.result);reader.readAsDataURL(file);photoInput.value=''});
+function openCrop(src){cropState={src,naturalW:0,naturalH:0,scale:1,x:0,y:0,startX:0,startY:0,dragging:false};cropImage.onload=()=>{cropState.naturalW=cropImage.naturalWidth;cropState.naturalH=cropImage.naturalHeight;zoom.value=1;fitCrop();modal.classList.add('open');};cropImage.src=src}
+function fitCrop(){
+ const W=cropWrap.clientWidth,H=cropWrap.clientHeight;const fit=Math.max(W/cropState.naturalW,H/cropState.naturalH);cropState.scale=fit;cropState.x=(W-cropState.naturalW*fit)/2;cropState.y=(H-cropState.naturalH*fit)/2;zoom.value=1;applyCrop()
+}
+function applyCrop(){const W=cropWrap.clientWidth,H=cropWrap.clientHeight;baseScale=Math.max(W/cropState.naturalW,H/cropState.naturalH);const s=baseScale*Number(zoom.value);const cx=W/2,cy=H/2;const oldS=cropState.scale||s;const oldCx=cropState.x+(cropState.naturalW*oldS)/2,oldCy=cropState.y+(cropState.naturalH*oldS)/2;cropState.x=cx-(oldCx-cx)*(s/oldS)-cropState.naturalW*s/2+cropState.naturalW*s/2;cropState.y=cy-(oldCy-cy)*(s/oldS)-cropState.naturalH*s/2+cropState.naturalH*s/2;cropState.scale=s;cropImage.style.width=(cropState.naturalW*s)+'px';cropImage.style.height=(cropState.naturalH*s)+'px';cropImage.style.left=cropState.x+'px';cropImage.style.top=cropState.y+'px'}
+zoom.addEventListener('input',()=>{const W=cropWrap.clientWidth,H=cropWrap.clientHeight,old=cropState.scale,base=Math.max(W/cropState.naturalW,H/cropState.naturalH),s=base*Number(zoom.value),cx=W/2,cy=H/2;const centerX=cropState.x+cropState.naturalW*old/2,centerY=cropState.y+cropState.naturalH*old/2;cropState.x=cx-(centerX-cx)*(s/old)-cropState.naturalW*s/2;cropState.y=cy-(centerY-cy)*(s/old)-cropState.naturalH*s/2;cropState.scale=s;cropImage.style.width=cropState.naturalW*s+'px';cropImage.style.height=cropState.naturalH*s+'px';cropImage.style.left=cropState.x+'px';cropImage.style.top=cropState.y+'px'});
+function pointerStart(e){cropState.dragging=true;cropState.startX=(e.touches?e.touches[0].clientX:e.clientX)-cropState.x;cropState.startY=(e.touches?e.touches[0].clientY:e.clientY)-cropState.y;cropImage.classList.add('dragging')}
+function pointerMove(e){if(!cropState.dragging)return;if(e.cancelable)e.preventDefault();const x=e.touches?e.touches[0].clientX:e.clientX,y=e.touches?e.touches[0].clientY:e.clientY;cropState.x=x-cropState.startX;cropState.y=y-cropState.startY;cropImage.style.left=cropState.x+'px';cropImage.style.top=cropState.y+'px'}
+function pointerEnd(){cropState.dragging=false;cropImage.classList.remove('dragging')}
+cropImage.addEventListener('mousedown',pointerStart);window.addEventListener('mousemove',pointerMove);window.addEventListener('mouseup',pointerEnd);cropImage.addEventListener('touchstart',pointerStart,{passive:false});window.addEventListener('touchmove',pointerMove,{passive:false});window.addEventListener('touchend',pointerEnd);
+function closeCrop(){modal.classList.remove('open')}
+function saveCrop(){
+ const W=cropWrap.clientWidth,H=cropWrap.clientHeight;const scale=cropState.scale;const sx=Math.max(0,(-cropState.x)/scale),sy=Math.max(0,(-cropState.y)/scale);const sw=Math.min(cropState.naturalW-sx,W/scale),sh=Math.min(cropState.naturalH-sy,H/scale);const canvas=document.createElement('canvas');canvas.width=1079;canvas.height=Math.round(1079/RATIO);const ctx=canvas.getContext('2d');ctx.drawImage(cropImage,sx,sy,sw,sh,0,0,canvas.width,canvas.height);const data=canvas.toDataURL('image/jpeg',.88);const id=uid();const arr=getCustoms();arr.push({id,src:data,name:'追加したデザイン'});saveCustoms(arr);setName(id,'追加したデザイン');closeCrop();renderDesigns();mainCard.src=data;localStorage.setItem('selectedCard',data);showMain();
+}
+</script>
+</body>
+</html>
