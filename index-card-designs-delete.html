@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>My Card</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;min-height:100%;background:#f2f2f7;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Arial,sans-serif}
+body{color:#111}
+.container{min-height:100vh;padding:12px 18px max(35px,env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center}
+.header{width:100%;max-width:400px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.back{font-size:30px;font-weight:300;color:#007aff;width:30px;cursor:pointer}
+.title{font-size:17px;font-weight:600}
+.spacer{width:30px}
+.card{width:100%;max-width:400px;margin:0 auto;border-radius:20px;overflow:hidden;background:white;box-shadow:0 5px 12px rgba(0,0,0,.10),0 15px 35px rgba(0,0,0,.12);transform:translateZ(0)}
+.card img{display:block;width:100%;height:auto;object-fit:contain}
+.design-page{width:100%;max-width:400px;display:none}
+.design-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.design-item{border:0;background:white;border-radius:16px;padding:0;overflow:hidden;box-shadow:0 3px 10px rgba(0,0,0,.10);cursor:pointer;text-align:center}
+.design-item img{display:block;width:100%;height:auto;aspect-ratio:1.59;object-fit:cover}
+.design-name{font-size:15px;font-weight:500;padding:10px 5px 12px}
+.add-item{min-height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#007aff;font-size:15px;font-weight:500}
+.add-icon{font-size:32px;font-weight:300;line-height:1;margin-bottom:8px}
+.custom-item{position:relative}
+.delete-button{display:block;width:calc(100% - 20px);margin:0 10px 10px;padding:7px 0;border:0;border-radius:10px;background:#f2f2f7;color:#ff3b30;font-size:14px;font-weight:500;cursor:pointer}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="mainPage">
+    <div class="header">
+      <div class="back" onclick="showDesigns()">‹</div>
+      <div class="title">My Card</div>
+      <div class="spacer"></div>
+    </div>
+    <div class="card">
+      <img id="mainCard" src="card.png" alt="My Card">
+    </div>
+  </div>
+
+  <div id="designPage" class="design-page">
+    <div class="header">
+      <div class="back" onclick="showMain()">‹</div>
+      <div class="title">カードデザイン変更</div>
+      <div class="spacer"></div>
+    </div>
+
+    <div class="design-grid">
+      <button class="design-item" onclick="selectDesign('design1.png')">
+        <img src="design1.png" alt="デザイン1">
+        <div class="design-name">デザイン1</div>
+      </button>
+
+      <button class="design-item" onclick="selectDesign('card.png')">
+        <img src="card.png" alt="デザイン2">
+        <div class="design-name">デザイン2</div>
+      </button>
+
+      <label class="design-item add-item">
+        <span class="add-icon">＋</span>
+        <span>新たなデザインを追加...</span>
+        <input id="photoInput" type="file" accept="image/*">
+      </label>
+
+      <div id="customItem" class="design-item custom-item" style="display:none">
+        <div onclick="selectCustom()">
+          <img id="customPreview" alt="追加したデザイン">
+          <div class="design-name">追加したデザイン</div>
+        </div>
+        <button class="delete-button" onclick="deleteCustom(event)">削除</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const mainCard = document.getElementById('mainCard');
+const mainPage = document.getElementById('mainPage');
+const designPage = document.getElementById('designPage');
+const photoInput = document.getElementById('photoInput');
+const customItem = document.getElementById('customItem');
+const customPreview = document.getElementById('customPreview');
+
+const saved = localStorage.getItem('selectedCard');
+if (saved) mainCard.src = saved;
+
+const customImage = localStorage.getItem('customCardImage');
+if (customImage) {
+  customPreview.src = customImage;
+  customItem.style.display = 'block';
+}
+
+function showDesigns(){
+  mainPage.style.display='none';
+  designPage.style.display='block';
+}
+
+function showMain(){
+  designPage.style.display='none';
+  mainPage.style.display='block';
+}
+
+function selectDesign(src){
+  mainCard.src=src;
+  localStorage.setItem('selectedCard',src);
+  showMain();
+}
+
+function selectCustom(){
+  const img=localStorage.getItem('customCardImage');
+  if(img){
+    mainCard.src=img;
+    localStorage.setItem('selectedCard',img);
+    showMain();
+  }
+}
+
+function deleteCustom(event){
+  event.stopPropagation();
+  if(!confirm('追加したデザインを削除しますか？')) return;
+
+  localStorage.removeItem('customCardImage');
+  localStorage.setItem('selectedCard','card.png');
+  mainCard.src='card.png';
+  customPreview.removeAttribute('src');
+  customItem.style.display='none';
+}
+
+photoInput.addEventListener('change',function(){
+  const file=this.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')) return;
+
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const data=e.target.result;
+    localStorage.setItem('customCardImage',data);
+    customPreview.src=data;
+    customItem.style.display='block';
+    mainCard.src=data;
+    localStorage.setItem('selectedCard',data);
+    showMain();
+  };
+  reader.readAsDataURL(file);
+});
+</script>
+</body>
+</html>
